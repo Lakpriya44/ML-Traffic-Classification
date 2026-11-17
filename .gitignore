@@ -1,0 +1,27 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Generated files
+*.joblib
+*.pkl
+*.model
+
+# Temporary files
+*.tmp
+*.log
+
+# Environment variables
+.env
