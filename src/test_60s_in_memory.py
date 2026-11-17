@@ -67,8 +67,25 @@ for file_path in files:
 
     df = pd.DataFrame(data)
 
+    print("\nFEATURE NAMES")
+    print("=" * 60)
+
+    for index, column in enumerate(df.columns, start=1):
+        print(f"{index:02d}. {column}")
+
+    print("\nDATA TYPES")
+    print("=" * 60)
+
+    print(df.dtypes)
+
+    print("\nDATASET SHAPE")
+    print("=" * 60)
+
+    print(df.shape)
     print("Valid records:", len(df))
     print("Columns:", len(df.columns))
     print("Exact duplicate rows:", df.duplicated().sum())
 
     print("Target classes:", df["class1"].nunique())
+
+    
