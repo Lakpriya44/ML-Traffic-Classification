@@ -13,7 +13,7 @@ Each team member trains and evaluates **one model** on the same processed data, 
 |---|---|---|---|---|
 | Member 1 | _(add name)_ | _(add handle)_ | Data inspection, cleaning and processed train/test files | Done |
 | Member 2 | _(add name)_ | _(add handle)_ | Logistic Regression | Done |
-| Member 3 | _(add name)_ | _(add handle)_ | Decision Tree | Done |
+| Member 3 | _(add name)_ | _(add handle)_ | XGBoost | Done |
 | Member 4 | _(add name)_ | _(add handle)_ | _(add model)_ | _(add status)_ |
 | Member 5 | _(add name)_ | _(add handle)_ | _(add model)_ | _(add status)_ |
 
@@ -76,21 +76,20 @@ ML-Traffic-Classification/
 │   └── processed/                 cleaned train/test CSV files for every timeout and task
 ├── notebooks/
 │   ├── 01_dataset_inspection.ipynb
-│   └── 02_decision_tree_model.ipynb
+│   └── 02_xgboost_model.ipynb
 ├── reports/
 │   ├── class_distributions.csv
 │   ├── dataset_audit_summary.csv
 │   ├── figures/                   Logistic Regression confusion matrices
 │   └── results/
 │       ├── logreg_*.csv, logistic_regression_*.csv    Logistic Regression results
-│       └── decision_tree/          Decision Tree results (figures, tables, model info)
+│       └── xgboost/                XGBoost results (figures, tables, model info)
 ├── src/
 │   ├── load_data.py               shared ARFF loader
 │   ├── build_processed.py         builds data/processed/
 │   ├── preprocessing/             dataset audit
 │   ├── investigations/            data quality checks
 │   └── models/                    model scripts
-├── Decision_Tree_Explanation.html
 ├── requirements.txt
 └── README.md
 ```
@@ -135,49 +134,55 @@ so the results can be compared directly. The main development dataset is **14cla
 
 _(Member 2: add your notes and conclusions here.)_
 
-### Decision Tree (Member 3)
+### XGBoost (Member 3)
 
-- Notebook: `notebooks/02_decision_tree_model.ipynb` (markdown explanation in every section)
-- Results folder: `reports/results/decision_tree/` (`figures/`, `tables/`, `model/`, `best_params.json`, `tree_rules.txt`)
-- Explanation page: `Decision_Tree_Explanation.html` (open it from the project folder so the charts load)
+- Notebook: `notebooks/02_xgboost_model.ipynb` (markdown explanation in every section)
+- Results folder: `reports/results/xgboost/` (`figures/`, `tables/`, `model/`, `best_params.json`)
+- Needs the `xgboost` package (already in `requirements.txt`). The full notebook takes about 45 minutes on a 12-core laptop.
 
 **What the notebook does**
 
-1. Baseline `DecisionTreeClassifier` (default settings)
-2. **Hyperparameter tuning** with `RandomizedSearchCV` (150 settings) using **group-aware 5-fold cross validation** (`StratifiedGroupKFold` on `group_id`), best model picked by macro F1
-3. Cross validation of the best model (score of every fold)
-4. **Learning curves** (baseline vs tuned)
-5. **Validation curves** for `max_depth`, `min_samples_leaf`, `ccp_alpha`
-6. Final test on the hold-out test set (used only once)
-7. Per-class report, confusion matrix, most common mistakes
-8. Impurity and permutation feature importance
-9. Tree plot (top levels) and full rules
-10. Same tuned settings on all four timeouts, and comparison with Logistic Regression
+1. Labels encoded with `LabelEncoder` (XGBoost needs class numbers)
+2. Baseline `XGBClassifier` (default settings, `tree_method="hist"`)
+3. **Hyperparameter tuning** with `RandomizedSearchCV` (40 settings) using **group-aware 5-fold cross validation** (`StratifiedGroupKFold` on `group_id`), best model picked by macro F1
+4. Class weight check: tuned model with and without balanced sample weights (chosen by CV)
+5. Cross validation of the best model (score of every fold)
+6. **Learning curves** (baseline vs tuned)
+7. **Boosting curve**: train and validation log loss / error after every tree
+8. **Validation curves** for `n_estimators`, `max_depth`, `learning_rate`
+9. Final test on the hold-out test set (used only once)
+10. Per-class report, confusion matrix, most common mistakes
+11. Gain and permutation feature importance
+12. Same tuned settings on all four timeouts, and comparison with Logistic Regression
 
-**Best settings:** `criterion="gini"`, `splitter="best"`, `max_depth=25`, `min_samples_split=2`, `min_samples_leaf=2`,
-`max_features=0.5`, `class_weight=None`, `ccp_alpha=0.0002` (tree depth 22, 585 leaves)
+**Best settings:** `n_estimators=400`, `max_depth=10`, `learning_rate=0.2`, `subsample=0.6`, `colsample_bytree=0.7`,
+`min_child_weight=3`, `gamma=0`, `reg_lambda=5`, `reg_alpha=0.5`, no class weights
 
 **Results (14class, 15s)**
 
 | | Accuracy | Macro F1 | Balanced acc. | MCC |
 |---|---:|---:|---:|---:|
-| 5-fold CV (train) | 0.780 | 0.749 ± 0.008 | 0.748 | |
-| Test | 0.778 | 0.727 | 0.727 | 0.752 |
+| 5-fold CV (train) | 0.850 | 0.822 ± 0.008 | 0.819 | |
+| Test (baseline, default settings) | 0.854 | 0.816 | 0.811 | 0.837 |
+| **Test (tuned)** | **0.861** | **0.824** | **0.821** | **0.844** |
 
 | Timeout | Accuracy | Macro F1 | MCC |
 |---|---:|---:|---:|
-| 15s | 0.778 | 0.727 | 0.752 |
-| 30s | 0.774 | 0.737 | 0.745 |
-| 60s | 0.770 | 0.711 | 0.743 |
-| 120s | 0.760 | 0.705 | 0.716 |
+| 15s | 0.861 | 0.824 | 0.844 |
+| 30s | 0.850 | 0.814 | 0.831 |
+| 60s | 0.867 | 0.823 | 0.851 |
+| 120s | 0.818 | 0.773 | 0.785 |
 
 **Key findings**
 
-- Macro F1 is about **2x higher** than Logistic Regression on every timeout, because the class boundaries are non-linear.
-- Tuning cut the overfitting gap (train − validation macro F1) from **0.249 to 0.114** and made the tree about 4x smaller.
-- The learning curve is still rising, so **more data would help**.
-- Hardest pairs: `BROWSING` ↔ `VPN-BROWSING` and `VPN-CHAT` ↔ `VPN-FT`. Easiest classes: `VOIP`, `VPN-VOIP` (F1 ≈ 0.98).
-- Most important features: `flowBytesPerSecond`, `mean_fiat`, `duration`.
+- Macro F1 is about **2.4x higher** than Logistic Regression (0.824 vs 0.349 on 15s), because the class boundaries are non-linear.
+- Tuning gave a small but consistent gain over the default XGBoost (CV macro F1 0.819 → 0.822, test 0.816 → 0.824).
+- Balanced class weights raised balanced accuracy a little but lowered macro F1, so they were not used.
+- The model still has a train–validation gap (train macro F1 ≈ 0.98, validation ≈ 0.82), and the learning curve is still rising, so **more data would help**.
+- The boosting curve shows validation log loss is lowest around 180 trees, while macro F1 keeps improving slowly up to 400 trees.
+- Hardest pairs: `BROWSING` ↔ `VPN-BROWSING`, `VPN-CHAT` ↔ `VPN-FT`, `VPN-P2P` → `P2P`. Easiest classes: `VOIP`, `VPN-VOIP` (F1 ≈ 0.99).
+- Most important features (permutation): `flowBytesPerSecond`, `min_flowiat`, `duration`, `max_biat`.
+- Shorter windows work better; 120s is the weakest (fewest training rows).
 
 ### _(Model name)_ (Member 4)
 
@@ -213,7 +218,7 @@ _(Add your notes and conclusions here.)_
 |---|---|---:|---:|---:|---:|
 | Logistic Regression (baseline) | Member 2 | 0.481 | 0.295 | 0.308 | 0.414 |
 | Logistic Regression (balanced) | Member 2 | 0.431 | 0.349 | 0.407 | 0.387 |
-| Decision Tree (tuned) | Member 3 | 0.778 | 0.727 | 0.727 | 0.752 |
+| XGBoost (tuned) | Member 3 | 0.861 | 0.824 | 0.821 | 0.844 |
 | _(add model)_ | Member 4 | | | | |
 | _(add model)_ | Member 5 | | | | |
 
