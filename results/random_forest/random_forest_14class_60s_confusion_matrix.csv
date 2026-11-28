@@ -1,0 +1,15 @@
+,predicted_BROWSING,predicted_CHAT,predicted_FT,predicted_MAIL,predicted_P2P,predicted_STREAMING,predicted_VOIP,predicted_VPN-BROWSING,predicted_VPN-CHAT,predicted_VPN-FT,predicted_VPN-MAIL,predicted_VPN-P2P,predicted_VPN-STREAMING,predicted_VPN-VOIP
+actual_BROWSING,444,10,3,3,6,1,0,30,0,1,0,1,0,1
+actual_CHAT,14,107,0,4,3,0,0,2,11,5,0,2,0,3
+actual_FT,7,1,209,9,1,0,1,5,1,6,2,0,0,0
+actual_MAIL,3,0,2,127,1,0,0,3,1,2,7,0,0,1
+actual_P2P,2,1,1,0,181,0,1,3,1,2,0,5,0,3
+actual_STREAMING,4,0,1,0,0,23,0,6,2,4,0,3,1,0
+actual_VOIP,3,1,3,0,0,0,335,2,1,0,0,0,0,14
+actual_VPN-BROWSING,43,8,1,1,1,1,0,413,10,9,0,2,1,2
+actual_VPN-CHAT,4,6,2,3,0,0,3,8,65,1,2,0,0,2
+actual_VPN-FT,6,5,0,7,2,1,0,13,4,121,1,3,2,4
+actual_VPN-MAIL,1,2,3,14,0,1,0,2,1,2,38,0,0,0
+actual_VPN-P2P,1,0,0,1,10,1,1,2,0,3,0,97,3,2
+actual_VPN-STREAMING,1,0,1,1,0,0,0,0,0,0,0,2,33,1
+actual_VPN-VOIP,3,2,1,0,1,0,13,5,1,1,1,1,0,293

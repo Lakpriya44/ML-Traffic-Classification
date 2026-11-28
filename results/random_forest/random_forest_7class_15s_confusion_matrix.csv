@@ -1,0 +1,8 @@
+,predicted_BROWSING,predicted_CHAT,predicted_FT,predicted_MAIL,predicted_P2P,predicted_STREAMING,predicted_VOIP
+actual_BROWSING,952,21,12,0,4,11,0
+actual_CHAT,55,301,39,6,5,1,2
+actual_FT,24,40,435,13,17,16,2
+actual_MAIL,6,11,15,98,2,0,0
+actual_P2P,11,7,11,1,288,3,0
+actual_STREAMING,10,1,6,1,2,165,0
+actual_VOIP,2,1,5,0,0,1,1008
